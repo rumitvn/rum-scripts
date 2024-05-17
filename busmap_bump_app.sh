@@ -2,7 +2,6 @@
 
 # Define project directories
 project_directories=(
-    "/Users/rumnguyen/StudioProjects/busmap-android-3/"
     "/Users/rumnguyen/StudioProjects/busmap-android-2/"
     "/Users/rumnguyen/StudioProjects/busmap-android/"
 )
@@ -48,6 +47,8 @@ echo "Build Flavor: $selected_flavor"
 echo "Build Option: $selected_option"
 echo "Current Git Branch: $git_branch"
 echo -e "\033[0m"
+
+git pull
 
 # Check if the user selected an option
 if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
@@ -112,6 +113,12 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
         # Check if copy was successful
         if [ $? -eq 0 ]; then
             echo "File copied successfully to: ${destination_file}"
+            open ${destination_dir}
+            # Define Google Play Console URL
+            google_play_console_url="https://play.google.com/console/u/0/developers/9090446698342287343/app/4974327694095681934/tracks/production"
+            # Open Google Play Console URL in Chrome
+            open -a "Google Chrome" "$google_play_console_url"
+
         else
             echo "Error copying file."
         fi

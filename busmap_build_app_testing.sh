@@ -5,6 +5,7 @@ project_directories=(
     "/Users/rumnguyen/StudioProjects/busmap-android-3/"
     "/Users/rumnguyen/StudioProjects/busmap-android-2/"
     "/Users/rumnguyen/StudioProjects/busmap-android/"
+    "/Users/rumnguyen/StudioProjects/vinbus-app-android-temp/"
 )
 
 # Loop through each directory and prompt the user to select
@@ -23,6 +24,8 @@ echo "Git branch of selected directory: $git_branch"
 
 # Prompt the user to select project code
 PROJECT_CODE=$(echo -e "BUSMAP_TEST\nBUSMAP_MONTHLY_TICKET\nBUSMAP_RANKING\nMOTEL_MAP\nEMBUS\nEMBUS_DRIVER\nBUSMAP_HN\nBUSMAP_ADS_HUB\nSTUDENT_HUB\nWALLET_STAFF\nSTORE_VOUCHER\nPHENIKAA_CONNECT\nMAAS_CONNECT\nVINBUS\nHANH_TRINH_SO_DN" | fzf --prompt="Select project code: ")
+
+selected_bunlde_id=$(echo -e "com.t7.busmap\ncom.t7.busmap.staging\nvn.vinbus.app\nvn.vinbus.app.prd" | fzf --prompt="Select bundle/app ID: ")
 
 # Prompt the user to select build flavor
 selected_flavor=$(echo -e "Dev\nPrd" | fzf --prompt="Select build flavor: ")
@@ -113,7 +116,7 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
         --form "title=\"$TITLE\"" \
         --form "description=\"$DESCRIPTION\"" \
         --form "version=\"$VERSION\"" \
-        --form "bundleId=\"com.t7.busmap\"" \
+        --form "bundleId=\"$selected_bunlde_id\"" \
         --form "file=@\"$FILE_PATH\"")
         
         # Check if upload was successful
