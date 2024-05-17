@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 # Ensure the APK path argument is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: ./install_apk.sh <path_to_apk>"
