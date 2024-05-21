@@ -14,23 +14,22 @@ if [ ! -f "$CONFIG_FILE" ]; then
     exit 1
 fi
 
-# Read AUTH_TOKEN from JSON config file
-AUTH_TOKEN=$(jq -r '.AUTH_TOKEN' "$CONFIG_FILE")
-if [ -z "$AUTH_TOKEN" ]; then
-    echo "Error: AUTH_TOKEN not found in config file. Exiting."
+# Read configuration from JSON config file
+upload_token=$(jq -r '.upload_token' "$CONFIG_FILE")
+project_directories=$(jq -r '.project_directories[]' "$CONFIG_FILE")
+project_codes=$(jq -r '.project_codes[]' "$CONFIG_FILE")
+bundle_ids=$(jq -r '.bundle_ids[]' "$CONFIG_FILE")
+flavors=$(jq -r '.flavors[]' "$CONFIG_FILE")
+upload_url=$(jq -r '.upload_url' "$CONFIG_FILE")
+device_id=$(jq -r '.device_id' "$CONFIG_FILE")
+
+if [ -z "$upload_token" ]; then
+    echo "Error: upload_token not found in config file. Exiting."
     exit 1
 fi
 
-# Define project directories
-project_directories=(
-    "/Users/rumnguyen/StudioProjects/busmap-android-3/"
-    "/Users/rumnguyen/StudioProjects/busmap-android-2/"
-    "/Users/rumnguyen/StudioProjects/busmap-android/"
-    "/Users/rumnguyen/StudioProjects/vinbus-app-android-temp/"
-)
-
 # Loop through each directory and prompt the user to select
-selected_directory=$(for directory in "${project_directories[@]}"; do
+selected_directory=$(for directory in $project_directories; do
     # Log the Git branch name of the current directory
     git_branch=$(cd "$directory" && git rev-parse --abbrev-ref HEAD)
     echo "$directory - Git branch: $git_branch"
@@ -44,12 +43,13 @@ git_branch=$(git rev-parse --abbrev-ref HEAD)
 echo "Git branch of selected directory: $git_branch"
 
 # Prompt the user to select project code
-PROJECT_CODE=$(echo -e "BUSMAP_TEST\nBUSMAP_MONTHLY_TICKET\nBUSMAP_RANKING\nMOTEL_MAP\nEMBUS\nEMBUS_DRIVER\nBUSMAP_HN\nBUSMAP_ADS_HUB\nSTUDENT_HUB\nWALLET_STAFF\nSTORE_VOUCHER\nPHENIKAA_CONNECT\nMAAS_CONNECT\nVINBUS\nHANH_TRINH_SO_DN" | fzf --prompt="Select project code: ")
+PROJECT_CODE=$(echo "$project_codes" | tr ' ' '\n' | fzf --prompt="Select project code: ")
 
-selected_bunlde_id=$(echo -e "com.t7.busmap\ncom.t7.busmap.staging\nvn.vinbus.app\nvn.vinbus.app.prd" | fzf --prompt="Select bundle/app ID: ")
+# Prompt the user to select bundle/app ID
+selected_bundle_id=$(echo "$bundle_ids" | tr ' ' '\n' | fzf --prompt="Select bundle/app ID: ")
 
 # Prompt the user to select build flavor
-selected_flavor=$(echo -e "Dev\nPrd" | fzf --prompt="Select build flavor: ")
+selected_flavor=$(echo "$flavors" | tr ' ' '\n' | fzf --prompt="Select build flavor: ")
 
 # Prompt the user to select clean or not clean build
 selected_option=$(echo -e "not clean\nclean" | fzf --prompt="Select build option: ")
@@ -102,7 +102,6 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
         echo "chmod result: $chmod_result"
     fi
 
-
     # Run the selected build command
     $build_command
 
@@ -110,35 +109,34 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
     if [ $? -eq 0 ]; then
         # Green color for success message
         # echo -e "\033[32mBuild successful. Uploading APK...\033[0m"
-        
+
         # Set variables for curl request
-        DEVICE_ID="mobile-cli"
         TITLE="$selected_version_name $selected_flavor"
         VERSION="$selected_version_name"
-        
+
         FILE_PATH="busMap/build/outputs/apk/${selected_flavor}/release/busMap-${selected_flavor}-universal-release.apk"
 
         # Get the APK file size
-        file_size=$(ls -lh "busMap/build/outputs/apk/${selected_flavor}/release/busMap-${selected_flavor}-universal-release.apk" | awk '{print $5}')
+        file_size=$(ls -lh "$FILE_PATH" | awk '{print $5}')
 
         # Extract the file name from the file path
-        file_name=$(basename "busMap/build/outputs/apk/${selected_flavor}/release/busMap-${selected_flavor}-universal-release.apk")
+        file_name=$(basename "$FILE_PATH")
 
         echo -e "\033[32mBuild successful: $file_name ($file_size)"
 
         echo -e "Uploading APK...\033[0m"
-        
+
         # Upload APK using curl
-        response=$(curl --write-out "%{http_code}" --silent --output /dev/null --location 'http://20.191.156.90/admin/system/upload_app_test' \
-        --header "device-id: $DEVICE_ID" \
-        --header "Authorization: $AUTH_TOKEN" \
+        response=$(curl --write-out "%{http_code}" --silent --output /dev/null --location "$upload_url" \
+        --header "device-id: $device_id" \
+        --header "Authorization: $upload_token" \
         --form "projectCode=\"$PROJECT_CODE\"" \
         --form "title=\"$TITLE\"" \
         --form "description=\"$DESCRIPTION\"" \
         --form "version=\"$VERSION\"" \
-        --form "bundleId=\"$selected_bunlde_id\"" \
+        --form "bundleId=\"$selected_bundle_id\"" \
         --form "file=@\"$FILE_PATH\"")
-        
+
         # Check if upload was successful
         if [ "$response" -eq 200 ]; then
             # Green color for success message
@@ -148,7 +146,6 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
             echo -e "\033[31mUpload failed.\033[0m"
             echo "Upload response: $response"
         fi
-
     else
         # Red color for failure message
         echo -e "\033[31mBuild failed.\033[0m"
@@ -158,4 +155,3 @@ else
     echo "No option selected. Exiting."
     exit 1
 fi
-
