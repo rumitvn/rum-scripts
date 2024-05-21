@@ -4,6 +4,7 @@
 project_directories=(
     "/Users/rumnguyen/StudioProjects/busmap-android-2/"
     "/Users/rumnguyen/StudioProjects/busmap-android/"
+    "/Users/rumnguyen/StudioProjects/vinbus-app-android-temp/"
 )
 
 # Loop through each directory and prompt the user to select

@@ -1,5 +1,26 @@
 #!/bin/bash
 
+CONFIG_DIR="$HOME/.config/rum-scripts"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+
+# Check if .config directory and config.json file exist
+if [ ! -d "$CONFIG_DIR" ]; then
+    echo "Error: $CONFIG_DIR directory does not exist. Exiting."
+    exit 1
+fi
+
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Error: $CONFIG_FILE does not exist. Exiting."
+    exit 1
+fi
+
+# Read AUTH_TOKEN from JSON config file
+AUTH_TOKEN=$(jq -r '.AUTH_TOKEN' "$CONFIG_FILE")
+if [ -z "$AUTH_TOKEN" ]; then
+    echo "Error: AUTH_TOKEN not found in config file. Exiting."
+    exit 1
+fi
+
 # Define project directories
 project_directories=(
     "/Users/rumnguyen/StudioProjects/busmap-android-3/"
@@ -50,9 +71,9 @@ echo -e "\033[34m"
 echo "Project Code: $PROJECT_CODE"
 echo "Build Flavor: $selected_flavor"
 echo "Build Option: $selected_option"
-echo "Selected Version Name: $selected_version_name"
-echo "Description: $DESCRIPTION"
-echo "Current Git Branch: $git_branch"
+echo "Version Name: $selected_version_name"
+echo "Version Description: $DESCRIPTION"
+echo "Git Branch: $git_branch"
 echo -e "\033[0m"
 
 # Check if the user selected an option
@@ -92,7 +113,6 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
         
         # Set variables for curl request
         DEVICE_ID="mobile-cli"
-	    AUTH_TOKEN="Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzA1NTMsImZpcnN0TmFtZSI6IlJ1bSIsImxhc3ROYW1lIjoiTmd1eeG7hW4iLCJpYXQiOjE2MTQ1ODAwMDYsImV4cCI6NDc3MDM0MDAwNn0.ZoO2gIDdJHoIFGyIOv3b-2xizBAyjNiKlbpVprcMNXw"
         TITLE="$selected_version_name $selected_flavor"
         VERSION="$selected_version_name"
         
