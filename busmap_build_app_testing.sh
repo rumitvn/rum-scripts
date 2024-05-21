@@ -22,6 +22,10 @@ bundle_ids=$(jq -r '.bundle_ids[]' "$CONFIG_FILE")
 flavors=$(jq -r '.flavors[]' "$CONFIG_FILE")
 upload_url=$(jq -r '.upload_url' "$CONFIG_FILE")
 device_id=$(jq -r '.device_id' "$CONFIG_FILE")
+declare -A file_paths
+while IFS="=" read -r key value; do
+    file_paths[$key]=$value
+done < <(jq -r '.file_paths | to_entries[] | .key + "=" + .value' "$CONFIG_FILE")
 
 if [ -z "$upload_token" ]; then
     echo "Error: upload_token not found in config file. Exiting."
@@ -114,7 +118,7 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
         TITLE="$selected_version_name $selected_flavor"
         VERSION="$selected_version_name"
 
-        FILE_PATH="busMap/build/outputs/apk/${selected_flavor}/release/busMap-${selected_flavor}-universal-release.apk"
+        FILE_PATH="${file_paths[$selected_flavor]}"
 
         # Get the APK file size
         file_size=$(ls -lh "$FILE_PATH" | awk '{print $5}')
