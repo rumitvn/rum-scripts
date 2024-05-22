@@ -17,12 +17,9 @@ fi
 # Read configuration from JSON config file
 project_directories=$(jq -r '.project_directories[]' "$CONFIG_FILE")
 flavors=$(jq -r '.flavors[]' "$CONFIG_FILE")
-declare -A google_play_console_urls
-while IFS="=" read -r key value; do
-    google_play_console_urls[$key]=$value
-done < <(jq -r '.google_play_console_urls | to_entries[] | .key + "=" + .value' "$CONFIG_FILE")
-browser_path=$(jq -r '.browser_path' "$CONFIG_FILE")
+browser_app=$(jq -r '.browser_app' "$CONFIG_FILE")
 destination_dir=$(jq -r '.destination_dir' "$CONFIG_FILE")
+google_play_console_url=$(jq -r '.google_play_console_url' "$CONFIG_FILE")
 
 # Loop through each directory and prompt the user to select
 selected_directory=$(for directory in $project_directories; do
@@ -41,9 +38,6 @@ echo "Git branch of selected directory: $git_branch"
 # Prompt the user to select build flavor
 selected_flavor=$(echo "$flavors" | tr ' ' '\n' | fzf --prompt="Select build flavor: ")
 
-# Select the Google Play Console URL based on the flavor
-google_play_console_url="${google_play_console_urls[$selected_flavor]}"
-
 # Prompt the user to select clean or not clean build
 selected_option=$(echo -e "not clean\nclean" | fzf --prompt="Select build option: ")
 
@@ -51,7 +45,7 @@ selected_option=$(echo -e "not clean\nclean" | fzf --prompt="Select build option
 echo -e "\033[34m"
 echo "Build Flavor: $selected_flavor"
 echo "Build Option: $selected_option"
-echo "Git Branch: $git_branch"
+echo "Current Git Branch: $git_branch"
 echo "Google Play Console URL: $google_play_console_url"
 echo -e "\033[0m"
 
@@ -114,7 +108,7 @@ if [ -n "$selected_option" ] && [ -n "$selected_flavor" ]; then
             open ${destination_dir}
 
             # Open Google Play Console URL in Chrome
-            open -a "$browser_path" "$google_play_console_url"
+            open -a "$browser_app" "$google_play_console_url"
         else
             echo "Error copying file."
         fi
